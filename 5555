@@ -1,0 +1,231 @@
+#Configure a Jenkins pipeline to automate the building and deployment of a Dockerized application from GitHub
+
+
+Step 1 – Create Jenkins persistent volume
+docker volume create jenkins-data
+Output
+jenkins-data
+
+Step 2 – Start Jenkins container
+For Linux/macOS
+docker run -d \  --name jenkins \  -p 8080:8080 -p 50000:50000 \  -v jenkins-data:/var/jenkins_home \  -v /var/run/docker.sock:/var/run/docker.sock \  jenkins/jenkins:lts
+For Windows CMD, use one line
+docker run -d --name jenkins -p 8080:8080 -p 50000:50000 -v jenkins-data:/var/jenkins_home -v /var/run/docker.sock:/var/run/docker.sock jenkins/jenkins:lts
+
+Check container
+
+docker ps
+Output
+You should see a container named jenkins running.
+
+Step 3 – Get Jenkins initial admin password
+docker exec jenkins cat /var/jenkins_home/secrets/initialAdminPassword
+Output
+You will get a long password like:
+a1b2c3d4e5f6g7h8...
+Copy this password.
+
+Step 4 – Open Jenkins in browser
+Open:
+http://localhost:8080
+
+
+Paste the admin password
+
+
+Click Continue
+
+
+Choose Install suggested plugins
+
+
+Wait for installation
+
+
+Create admin user
+
+
+Finish setup
+
+
+
+Step 5 – Install Docker Pipeline plugin
+In Jenkins:
+
+
+Go to Manage Jenkins
+
+
+Go to Plugins
+
+
+Search for Docker Pipeline
+
+
+Install it
+
+
+
+Step 6 – Install Docker CLI inside Jenkins container
+docker exec -u root jenkins bash -c "apt-get update && apt-get install -y docker.io"
+Check Docker inside Jenkins
+docker exec jenkins docker --version
+Example output
+Docker version 20.x.x
+
+Step 7 – Create your application files in GitHub repo
+Your GitHub repo should contain these files.
+app.py
+from flask import Flaskapp = Flask(__name__)@app.route('/')def home():    return "<h1>App deployed through Jenkins pipeline!</h1>"if __name__ == '__main__':    app.run(host='0.0.0.0', port=5000)
+requirements.txt
+flask
+Dockerfile
+FROM python:3.11-slimWORKDIR /appCOPY requirements.txt .RUN pip install --no-cache-dir -r requirements.txtCOPY . .EXPOSE 5000CMD ["python", "app.py"]
+
+Step 8 – Create Jenkinsfile in the root of repo
+Create a file named Jenkinsfile in your GitHub repository.
+pipeline {    agent any    environment {        IMAGE_NAME = "myapp"        DOCKER_HUB_USER = "deyona"    }    stages {        stage('Clone') {            steps {                git branch: 'main',                    url: 'https://github.com/deyonagoshica/myproject1.git'            }        }        stage('Build Image') {            steps {                sh 'docker build -t $DOCKER_HUB_USER/$IMAGE_NAME:latest .'            }        }        stage('Push to Hub') {            steps {                withCredentials([usernamePassword(                    credentialsId: 'dockerhub-creds',                    usernameVariable: 'DOCKER_USER',                    passwordVariable: 'DOCKER_PASS'                )]) {                    sh '''                      echo $DOCKER_PASS | docker login -u $DOCKER_USER --password-stdin                      docker push $DOCKER_HUB_USER/$IMAGE_NAME:latest                    '''                }            }        }        stage('Deploy') {            steps {                sh '''                  docker rm -f myapp-container || true                  docker run -d --name myapp-container -p 5000:5000 $DOCKER_HUB_USER/$IMAGE_NAME:latest                '''            }        }    }}
+
+Step 9 – Push project to GitHub
+Run in your project folder:
+git add .git commit -m "Add Jenkins pipeline files"git push origin main
+
+Step 10 – Add Docker Hub credentials in Jenkins
+In Jenkins:
+
+
+Go to Manage Jenkins
+
+
+Go to Credentials
+
+
+Choose Global
+
+
+Click Add Credentials
+
+
+Fill like this:
+Kind: Username with passwordUsername: your Docker Hub usernamePassword: your Docker Hub password or access tokenID: dockerhub-credsDescription: Docker Hub credentials
+Click Create
+
+Step 11 – Create Jenkins Pipeline job
+In Jenkins:
+
+
+Click New Item
+
+
+Enter name: docker-pipeline
+
+
+Select Pipeline
+
+
+Click OK
+
+
+
+Step 12 – Configure pipeline from GitHub
+Inside job configuration:
+
+
+Scroll to Pipeline
+
+
+Choose Pipeline script from SCM
+
+
+SCM = Git
+
+
+Repository URL:
+
+
+https://github.com/deyonagoshica/myproject1.git
+
+
+Branch:
+
+
+*/main
+
+
+Script Path:
+
+
+Jenkinsfile
+Click Save
+
+Step 13 – Build the pipeline
+Click:
+Build Now
+
+Step 14 – Check Console Output
+Click the build number, then click:
+Console Output
+You should see stages like:
+[Pipeline] Start of Pipeline[Pipeline] stage[Pipeline] { (Clone)[Pipeline] stage[Pipeline] { (Build Image)docker build -t deyona/myapp:latest .[Pipeline] stage[Pipeline] { (Push to Hub)docker logindocker push deyona/myapp:latest[Pipeline] stage[Pipeline] { (Deploy)docker run -d --name myapp-container -p 5000:5000 deyona/myapp:latestFinished: SUCCESS
+
+Step 15 – Check running container
+Run:
+docker ps
+Output
+You should see:
+
+
+Jenkins container
+
+
+myapp-container
+
+
+
+Step 16 – Open deployed app
+Open in browser:
+http://localhost:5000
+Output
+App deployed through Jenkins pipeline!
+
+Step 17 – Verify Docker image in Docker Hub
+Go to Docker Hub and check:
+deyona/myapp:latest
+
+Folder structure of project
+myproject1/│├── app.py├── requirements.txt├── Dockerfile└── Jenkinsfile
+
+Full command summary
+Start Jenkins
+docker volume create jenkins-datadocker run -d --name jenkins -p 8080:8080 -p 50000:50000 -v jenkins-data:/var/jenkins_home -v /var/run/docker.sock:/var/run/docker.sock jenkins/jenkins:ltsdocker exec jenkins cat /var/jenkins_home/secrets/initialAdminPassworddocker exec -u root jenkins bash -c "apt-get update && apt-get install -y docker.io"
+Push project
+git add .git commit -m "Add Jenkins pipeline files"git push origin main
+Verify
+docker ps
+
+Expected output
+
+
+Jenkins opens on port 8080
+
+
+Pipeline runs successfully
+
+
+Docker image is built
+
+
+Docker image is pushed to Docker Hub
+
+
+Application is deployed on port 5000
+
+
+
+Result
+The Jenkins pipeline was configured successfully to automate cloning from GitHub, building the Docker image, pushing it to Docker Hub, and deploying the Dockerized application.
+
+Viva answer
+Jenkins pipeline automates CI/CD. It pulls code from GitHub, builds a Docker image using the Dockerfile, pushes the image to Docker Hub using stored credentials, and deploys the container automatically.
+Important note for Windows
+If Docker socket mount /var/run/docker.sock does not work on your system, Jenkins may fail to run Docker commands. In that case, send the exact error from Jenkins Console Output and I will give the fix for your machine.
