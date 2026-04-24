@@ -1,0 +1,203 @@
+#Use kubectl commands to create, scale, and manage Kubernetes resources like pods and deployments.
+
+
+✅ Step 0 – Start Kubernetes (Minikube)
+
+
+minikube start
+kubectl get nodes
+
+✔ Output should show:
+
+NAME       STATUS   ROLES    AGE   VERSION
+minikube   Ready    control-plane
+
+
+🚀 Step 1 – Create Deployment
+
+
+kubectl create deployment myapp --image=nginx:latest
+
+✔ Check output
+
+
+kubectl get deployments
+
+Example:
+
+NAME    READY   UP-TO-DATE   AVAILABLE
+myapp   1/1     1            1
+kubectl get pods
+
+Example:
+
+NAME                     READY   STATUS    RESTARTS
+myapp-xxxxxx-abcde       1/1     Running   0
+
+
+📈 Step 2 – Scale Deployment
+🔹 Scale up to 3
+
+
+kubectl scale deployment myapp --replicas=3
+kubectl get pods
+
+✔ Output:
+
+3 pods running
+🔹 Scale down to 1
+
+
+kubectl scale deployment myapp --replicas=1
+kubectl get pods
+
+✔ Output:
+
+1 pod running
+🌐 Step 3 – Expose Service
+
+
+kubectl expose deployment myapp --port=80 --type=NodePort
+
+
+✔ Check service
+kubectl get services
+
+Example:
+
+NAME    TYPE       PORT(S)
+myapp   NodePort   80:30007
+🌍 Open in browser
+
+minikube service myapp
+
+✔ This opens nginx page in browser
+
+🔍 Step 3 – Inspect & Logs
+
+
+Get pod name
+kubectl get pods
+Describe pod
+kubectl describe pod <pod-name>
+View logs
+kubectl logs <pod-name>
+
+
+🧹 Cleanup
+
+
+kubectl delete deployment myapp
+kubectl delete service myapp
+
+✔ Output:
+
+deployment "myapp" deleted
+service "myapp" deleted
+
+
+📄 Step 4 – Using YAML
+
+
+Create file: deployment.yaml
+
+
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: myapp
+spec:
+  replicas: 2
+  selector:
+    matchLabels:
+      app: myapp
+  template:
+    metadata:
+      labels:
+        app: myapp
+    spec:
+      containers:
+      - name: myapp
+        image: nginx:latest
+        ports:
+        - containerPort: 80
+
+
+
+Apply YAML
+
+kubectl apply -f deployment.yaml
+
+✔ Check everything
+
+kubectl get all
+
+Example output:
+
+deployment.apps/myapp
+pod/myapp-xxxx Running
+service/myapp
+
+
+
+
+
+
+optional
+
+
+Step 1 – Create a deployment
+
+bashcopy
+kubectl create deployment myapp --image=nginx:latest
+kubectl get deployments
+kubectl get pods
+
+Step 2 – Scale the deployment
+
+bashcopy
+# Scale up to 3 replicas
+kubectl scale deployment myapp --replicas=3
+kubectl get pods
+
+# Scale back down
+kubectl scale deployment myapp --replicas=1
+
+Step 3 – Expose, inspect & clean up
+
+bashcopy
+kubectl expose deployment myapp --port=80 --type=NodePort
+kubectl get services
+kubectl describe pod <pod-name>
+kubectl logs <pod-name>
+
+# Clean up
+kubectl delete deployment myapp
+kubectl delete service myapp
+
+Step 4 – Using a YAML manifest (deployment.yaml)
+
+yamlcopy
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: myapp
+spec:
+  replicas: 2
+  selector:
+    matchLabels:
+      app: myapp
+  template:
+    metadata:
+      labels:
+        app: myapp
+    spec:
+      containers:
+      - name: myapp
+        image: nginx:latest
+        ports:
+        - containerPort: 80
+
+bashcopy
+kubectl apply -f deployment.yaml
+kubectl get all
