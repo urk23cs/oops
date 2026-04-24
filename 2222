@@ -1,0 +1,49 @@
+Q 02
+
+Containerise a Flask application using Docker and deploy the image to Docker Hub.
+Docker Flask Docker Hub
+
+
+app.py
+
+pythoncopy
+from flask import Flask
+app = Flask(__name__)
+
+@app.route('/')
+def home():
+    return "Hello from Dockerised Flask!"
+
+if __name__ == '__main__':
+    app.run(host='0.0.0.0', port=5000)
+
+requirements.txt
+
+textcopy
+flask
+
+Dockerfile
+
+dockerfilecopy
+FROM python:3.11-slim
+WORKDIR /app
+COPY requirements.txt .
+RUN pip install -r requirements.txt
+COPY . .
+EXPOSE 5000
+CMD ["python", "app.py"]
+
+Build, run & push to Docker Hub
+
+bashcopy
+# Build
+docker build -t <dockerhub-username>/flask-app:latest .
+
+# Test locally → visit http://localhost:5000
+docker run -d -p 5000:5000 <dockerhub-username>/flask-app:latest
+
+# Login and push
+docker login
+docker push <dockerhub-username>/flask-app:latest
+Expected Output
+✅Browser shows Hello from Dockerised Flask! — Image visible on Docker Hub under your repository.
