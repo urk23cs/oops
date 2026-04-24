@@ -1,0 +1,153 @@
+
+
+Kubernetes Deployment & Service for Python App (from Docker Hub)
+— written in the same simple style so you can run without errors.
+
+✅ 🔹 OVERVIEW (What you are doing)
+You will:
+
+Pull a Python app image from Docker Hub
+Deploy it in Kubernetes using YAML
+Run multiple replicas
+Expose it using a Service
+Access it in browser
+🔹 Step 0: Prerequisites
+Install & start:
+
+Docker Desktop
+Minikube
+kubectl
+🔹 Step 1: Start Kubernetes Cluster
+minikube start --driver=docker
+🔹 Step 2: Verify Cluster
+kubectl get nodes
+✅ Output:
+
+Ready
+🔹 Step 3: Pull Python App Image
+We use Docker Hub sample:
+
+docker pull dockersamples/flaskapp
+✔ Confirms image is available
+
+🔹 Step 4: Create Deployment YAML
+Create file:
+
+python-deployment.yaml
+Paste:
+
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: python-web-deployment
+  labels:
+    app: python-web
+
+spec:
+  replicas: 2
+  selector:
+    matchLabels:
+      app: python-web
+
+  template:
+    metadata:
+      labels:
+        app: python-web
+
+    spec:
+      containers:
+      - name: python-web
+        image: dockersamples/flaskapp:latest
+        ports:
+        - containerPort: 5000
+🔹 Step 5: Apply Deployment
+kubectl apply -f python-deployment.yaml
+🔹 Step 6: Check Deployment
+kubectl get deployments
+kubectl get pods
+✅ Expected:
+
+2 pods running
+🔹 Step 7: View Details (Optional)
+kubectl describe deployment python-web-deployment
+🔹 Step 8: Create Service YAML
+Create file:
+
+python-service.yaml
+Paste:
+
+apiVersion: v1
+kind: Service
+metadata:
+  name: python-web-service
+
+spec:
+  type: NodePort
+  selector:
+    app: python-web
+
+  ports:
+  - protocol: TCP
+    port: 5000
+    targetPort: 5000
+🔹 Step 9: Apply Service
+kubectl apply -f python-service.yaml
+🔹 Step 10: Check Service
+kubectl get svc
+🔹 Step 11: Get Application URL
+minikube service python-web-service --url
+👉 Open the URL in browser
+
+✅ You will see:
+👉 Python Flask Web App Page
+
+🔹 Step 12: Cleanup
+Delete resources:
+
+kubectl delete -f python-deployment.yaml
+kubectl delete -f python-service.yaml
+🔹 Step 13: Stop Cluster
+minikube stop
+(Optional)
+
+minikube delete
+🔥 Common Errors (IMPORTANT)
+❌ Pods not running
+✔ Check:
+
+kubectl describe pod <pod-name>
+❌ Image not pulling
+✔ Ensure internet OR run:
+
+docker pull dockersamples/flaskapp
+❌ Service not opening
+✔ Run again:
+
+minikube service python-web-service --url
+❌ Port issue
+✔ Minikube auto handles NodePort → no need to change
+
+🧠 Viva Short Answers
+👉 What is Deployment?
+Manages pods and replicas.
+
+👉 What is Service?
+Exposes app to outside network.
+
+👉 Why replicas = 2?
+For scalability and high availability.
+
+👉 What is NodePort?
+Exposes app on a port accessible outside cluster.
+
+👉 What is Docker Hub?
+Repository for container images.
+
+🔁 Difference (Important for Exam)
+Feature	Previous Lab	This Lab
+App	Nginx	Python Flask
+Method	CLI	YAML
+Usage	Basic	Real app deployment
+✅ Final Memory Trick
+👉 Pull Image → Deployment → Pods → Service → URL → Browser → Cleanup
+
