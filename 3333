@@ -1,0 +1,93 @@
+#Monolithic Application using Python (Flask) – Student CRUD API
+
+Step 1 – Create project folder
+mkdir flask-monolith
+cd flask-monolith
+🐍 Step 2 – Create app.py
+from flask import Flask, request, jsonify
+
+app = Flask(__name__)
+
+# In-memory database
+students = {}
+next_id = 1
+
+# GET all students
+@app.route('/students', methods=['GET'])
+def get_students():
+    return jsonify(list(students.values()))
+
+# ADD student
+@app.route('/students', methods=['POST'])
+def add_student():
+    global next_id
+    data = request.get_json()
+
+    student = {
+        'id': next_id,
+        'name': data['name'],
+        'roll': data['roll']
+    }
+
+    students[next_id] = student
+    next_id += 1
+
+    return jsonify(student), 201
+
+# DELETE student
+@app.route('/students/<int:sid>', methods=['DELETE'])
+def delete_student(sid):
+    students.pop(sid, None)
+    return jsonify({'msg': 'Deleted'})
+
+# Run app
+if __name__ == '__main__':
+    app.run(debug=True)
+📦 Step 3 – Install Flask
+pip install flask
+▶️ Step 4 – Run the application
+python app.py
+Output:
+Running on http://127.0.0.1:5000
+🧪 Step 5 – Test the API
+🔹 1. Add student
+curl -X POST http://localhost:5000/students ^
+-H "Content-Type: application/json" ^
+-d "{\"name\":\"Alice\",\"roll\":\"CS001\"}"
+Output:
+{
+  "id": 1,
+  "name": "Alice",
+  "roll": "CS001"
+}
+🔹 2. Add another student
+curl -X POST http://localhost:5000/students ^
+-H "Content-Type: application/json" ^
+-d "{\"name\":\"Bob\",\"roll\":\"CS002\"}"
+🔹 3. Get all students
+curl http://localhost:5000/students
+Output:
+[
+  {"id":1,"name":"Alice","roll":"CS001"},
+  {"id":2,"name":"Bob","roll":"CS002"}
+]
+🔹 4. Delete student
+curl -X DELETE http://localhost:5000/students/1
+Output:
+{"msg":"Deleted"}
+🔹 5. Check again
+curl http://localhost:5000/students
+🌐 Optional: Test in Browser
+
+Open:
+
+http://localhost:5000/students
+📊 Expected Output
+API runs on port 5000 ✔
+Students can be added ✔
+Students list is displayed ✔
+Students can be deleted ✔
+🧠 Working
+Flask handles HTTP requests
+Data stored in dictionary (students)
+All logic inside one file → monolithic design
