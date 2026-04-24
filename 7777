@@ -1,0 +1,139 @@
+🧱 Step 1 – Create Project Folder
+mkdir python-app
+cd python-app
+🐍 Step 2 – Create Python App
+app.py
+from flask import Flask
+
+app = Flask(__name__)
+
+@app.route('/')
+def home():
+    return "<h1>Python App running with Docker & GitHub Actions 🚀</h1>"
+
+if __name__ == '__main__':
+    app.run(host='0.0.0.0', port=5000)
+📦 Step 3 – Create requirements file
+requirements.txt
+flask
+🐳 Step 4 – Create Dockerfile
+FROM python:3.11-slim
+
+WORKDIR /app
+
+COPY requirements.txt .
+
+RUN pip install --no-cache-dir -r requirements.txt
+
+COPY . .
+
+EXPOSE 5000
+
+CMD ["python", "app.py"]
+⚙️ Step 5 – Create GitHub Actions Workflow
+
+Create folders:
+
+mkdir .github
+mkdir .github\workflows
+
+Create file:
+
+notepad .github\workflows\build-push.yml
+
+Paste:
+
+name: Docker Build & Push
+
+on:
+  push:
+    branches: [ main ]
+
+jobs:
+  docker:
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v3
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+
+      - name: Login to Docker Hub
+        uses: docker/login-action@v3
+        with:
+          username: ${{ secrets.DOCKER_USERNAME }}
+          password: ${{ secrets.DOCKER_PASSWORD }}
+
+      - name: Build and push
+        uses: docker/build-push-action@v5
+        with:
+          context: .
+          push: true
+          tags: ${{ secrets.DOCKER_USERNAME }}/python-app:latest
+🔐 Step 6 – Create Docker Hub Token
+
+Go to Docker Hub
+
+Steps:
+
+Login
+Account Settings → Security
+New Access Token
+Copy token
+🔑 Step 7 – Add GitHub Secrets
+
+Go to GitHub repo:
+
+Settings → Secrets and variables → Actions
+
+Add:
+
+Secret 1
+Name: DOCKER_USERNAME
+Value: deyona
+Secret 2
+Name: DOCKER_PASSWORD
+Value: (paste docker token)
+📤 Step 8 – Push Code to GitHub
+git init
+git add .
+git commit -m "Initial commit with Docker pipeline"
+git branch -M main
+git remote add origin https://github.com/deyonagoshica/myproject1.git
+git pull origin main --allow-unrelated-histories
+git push origin main
+🚀 Step 9 – Trigger Workflow
+
+If not triggered:
+
+git commit --allow-empty -m "trigger workflow"
+git push origin main
+👀 Step 10 – Check Output
+
+Go to:
+
+GitHub → Actions tab
+
+You will see:
+
+Docker Build & Push
+📦 Step 11 – Check Docker Image
+
+Go to Docker Hub
+
+You will see:
+
+deyona/python-app:latest
+▶️ Step 12 – Run Image (optional)
+docker pull deyona/python-app:latest
+docker run -p 5000:5000 deyona/python-app:latest
+
+Open:
+
+http://localhost:5000
+📊 Output
+
+Browser displays:
+
+Python App running with Docker & GitHub Actions 🚀
