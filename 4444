@@ -1,0 +1,188 @@
+#Create a CI pipeline using GitHub Actions to build and push a Docker image of a Python app to Docker Hub
+
+Step 1 – Create project files
+
+Your project folder should look like this:
+
+python-app/
+│
+├── app.py
+├── requirements.txt
+├── Dockerfile
+└── .github/
+    └── workflows/
+        └── docker-publish.yml
+1. Create app.py
+from flask import Flask
+
+app = Flask(__name__)
+
+@app.route('/')
+def home():
+    return "<h1>Python App running from Docker image!</h1>"
+
+if __name__ == '__main__':
+    app.run(host='0.0.0.0', port=5000)
+2. Create requirements.txt
+flask
+3. Create Dockerfile
+FROM python:3.11-slim
+
+WORKDIR /app
+
+COPY requirements.txt .
+RUN pip install --no-cache-dir -r requirements.txt
+
+COPY . .
+
+EXPOSE 5000
+
+CMD ["python", "app.py"]
+Step 2 – Create workflow file
+
+Create folder and file:
+
+mkdir .github
+mkdir .github\workflows
+notepad .github\workflows\docker-publish.yml
+
+Paste this code:
+
+name: Build and Push Docker Image
+
+on:
+  push:
+    branches: [ main ]
+
+jobs:
+  build-push:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v3
+
+      - name: Log in to Docker Hub
+        uses: docker/login-action@v3
+        with:
+          username: ${{ secrets.DOCKER_USERNAME }}
+          password: ${{ secrets.DOCKER_PASSWORD }}
+
+      - name: Build Docker image
+        run: docker build -t ${{ secrets.DOCKER_USERNAME }}/python-app:latest .
+
+      - name: Push to Docker Hub
+        run: docker push ${{ secrets.DOCKER_USERNAME }}/python-app:latest
+
+Save and close the file.
+
+Step 3 – Add secrets to GitHub
+
+Open your GitHub repository.
+
+Go to:
+
+Settings → Secrets and variables → Actions
+
+Click New repository secret and add these two secrets:
+
+Secret 1
+Name: DOCKER_USERNAME
+Value: your Docker Hub username
+Secret 2
+Name: DOCKER_PASSWORD
+Value: your Docker Hub access token
+
+Example:
+
+DOCKER_USERNAME = deyona
+DOCKER_PASSWORD = dckr_pat_xxxxxxxxxxxxxx
+Step 4 – Create Docker Hub access token
+
+Open Docker Hub.
+
+Go to:
+
+Account Settings → Security → New Access Token
+
+Create a token and copy it.
+
+Use that token as the value of DOCKER_PASSWORD.
+
+Step 5 – Push project to GitHub
+
+Open terminal in your project folder and run:
+
+git init
+git add .
+git commit -m "Add Python app and GitHub Actions CI pipeline"
+git branch -M main
+git remote add origin https://github.com/<your-username>/<your-repo>.git
+git pull origin main --allow-unrelated-histories
+git push origin main
+
+If remote is already added, skip the git remote add origin command.
+
+Step 6 – Trigger the workflow
+
+Whenever you push to main, the workflow starts automatically.
+
+If needed, create an empty commit to trigger it:
+
+git commit --allow-empty -m "trigger workflow"
+git push origin main
+Step 7 – Check GitHub Actions output
+
+Open your GitHub repository and click:
+
+Actions
+
+You should see:
+
+Build and Push Docker Image
+
+Possible results:
+
+yellow = running
+green = success
+red = failed
+Step 8 – Check Docker Hub
+
+After successful workflow run, open Docker Hub.
+
+You should see this image:
+
+<your-dockerhub-username>/python-app:latest
+
+Example:
+
+deyona/python-app:latest
+Step 9 – Pull and run the image locally
+docker pull <your-dockerhub-username>/python-app:latest
+docker run -d -p 5000:5000 --name pythonapp <your-dockerhub-username>/python-app:latest
+
+Open in browser:
+
+http://localhost:5000
+
+Output:
+
+Python App running from Docker image!
+Expected Output
+In GitHub
+
+In the Actions tab:
+
+Build and Push Docker Image — Success
+In Docker Hub
+
+The image appears as:
+
+<your-dockerhub-username>/python-app:latest
+In Browser
+Python App running from Docker image!
+Working
+GitHub Actions starts when code is pushed to main
+It checks out the code
+Logs in to Docker Hub using secrets
+Builds the Docker image
+Pushes the image to Docker Hub
