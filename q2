@@ -1,0 +1,172 @@
+
+Flask App + Docker + Docker Hub (FULL STEP-BY-STEP)
+🔹 Step 0: Prerequisites (VERY IMPORTANT)
+Make sure you have installed:
+
+Docker Desktop
+Python (optional, but useful)
+👉 After installing Docker:
+
+Open Docker Desktop
+Ensure it says “Docker is running”
+🔹 Step 1: Create Project Folder
+Create a folder:
+
+flask-docker-app
+Inside it create 3 files:
+
+app.py
+requirements.txt
+Dockerfile
+🔹 Step 2: Write Flask App (app.py)
+👉 Copy and paste CORRECTED CODE (your given code had formatting errors):
+
+from flask import Flask, render_template_string
+
+app = Flask(__name__)
+
+HTML_TEMPLATE = """
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>Flask Docker App</title>
+<style>
+body {
+background: linear-gradient(to right, #00c6ff, #0072ff);
+color: white;
+font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+text-align: center;
+padding-top: 100px;
+}
+h1 {
+font-size: 3em;
+margin-bottom: 0.2em;
+}
+p {
+font-size: 1.5em;
+}
+.card {
+background: rgba(255, 255, 255, 0.1);
+padding: 2em;
+border-radius: 20px;
+box-shadow: 0 0 20px rgba(0,0,0,0.3);
+width: 50%;
+margin: auto;
+}
+</style>
+</head>
+<body>
+<div class="card">
+<h1>Welcome to Flask + Docker!</h1>
+<p>This is a vibrant web page running inside a Docker container.</p>
+<p>Change the code → Rebuild → Restart Docker to see updates!</p>
+</div>
+</body>
+</html>
+"""
+
+@app.route('/')
+def home():
+    return render_template_string(HTML_TEMPLATE)
+
+if __name__ == '__main__':
+    app.run(host='0.0.0.0', port=5000)
+🔹 Step 3: Create requirements.txt
+Flask==2.2.5
+🔹 Step 4: Create Dockerfile (IMPORTANT FIX)
+👉 Your Dockerfile had syntax mistakes. Use this:
+
+FROM python:3.9-slim
+
+WORKDIR /app
+
+COPY requirements.txt .
+RUN pip install -r requirements.txt
+
+COPY . .
+
+EXPOSE 5000
+
+CMD ["python", "app.py"]
+🔹 Step 5: Open Terminal in Project Folder
+👉 Right-click inside folder → Open Terminal / PowerShell
+
+🔹 Step 6: Build Docker Image
+docker build -t flask-docker-app .
+✔ Wait until build completes
+
+🔹 Step 7: Run Container
+Option 1 (Port 5000 free):
+docker run -p 5000:5000 flask-docker-app
+Option 2 (if error: port already in use):
+docker run -p 5050:5000 flask-docker-app
+🔹 Step 8: Check Output
+👉 Open browser:
+
+http://localhost:5000
+OR
+
+http://localhost:5050
+✅ You should see:
+“Welcome to Flask + Docker!” page
+
+🔹 Step 9: Login to Docker Hub
+👉 First create account on:
+
+Docker Hub
+Then run:
+
+docker login
+Enter:
+
+Username
+Password
+🔹 Step 10: Tag Image
+docker tag flask-docker-app yourusername/flask-docker-app:latest
+👉 Replace yourusername with your Docker Hub username
+
+🔹 Step 11: Push to Docker Hub
+docker push yourusername/flask-docker-app:latest
+✅ Now your image is online
+
+🔹 Step 12: Test Anywhere (IMPORTANT FOR EXAM)
+On any system:
+
+docker pull yourusername/flask-docker-app:latest
+docker run -p 5050:5000 yourusername/flask-docker-app:latest
+Open:
+
+http://localhost:5050
+🔥 Common Errors (Exam Tips)
+❌ Error: Docker not running
+✔ Solution: Start Docker Desktop
+
+❌ Port already in use
+✔ Use:
+
+-p 5050:5000
+❌ Syntax error in Dockerfile
+✔ Ensure:
+
+CMD ["python", "app.py"]
+❌ Changes not visible
+✔ Always rebuild:
+
+docker build -t flask-docker-app .
+🧠 Viva Short Answer (IMPORTANT)
+👉 What is Docker?
+Docker is a containerization platform used to package applications with dependencies.
+
+👉 What is containerization?
+Running applications in isolated environments called containers.
+
+👉 Why Docker Hub?
+To store and share Docker images online.
+
+👉 Why expose port 5000?
+Flask runs on port 5000, so we map it to host.
+
+✅ Final Flow (1-line memory trick)
+👉 Code → Build → Run → Test → Login → Tag → Push
+
