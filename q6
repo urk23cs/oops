@@ -1,0 +1,151 @@
+
+
+Manage Kubernetes Resources using CLI (kubectl + Minikube)
+
+I’ve cleaned everything so you can run smoothly and get output without confusion.
+
+✅ 🔹 OVERVIEW (What you are doing)
+You will:
+
+Install tools
+Start a local Kubernetes cluster
+Create a Pod
+Create & scale a Deployment
+Expose it as a Service
+Access it in browser
+Clean everything
+🔹 Step 0: Prerequisites
+Install:
+
+Docker Desktop
+kubectl
+Minikube
+👉 Start Docker before continuing
+
+🔹 Step 1: Verify Installations
+docker --version
+kubectl version --client
+minikube version
+✔ If versions appear → OK
+
+🔹 Step 2: Start Kubernetes Cluster
+minikube start --driver=docker
+🔹 Step 3: Check Cluster
+minikube status
+kubectl get nodes
+✅ Output should show:
+
+Ready
+🔹 Step 4: Create Pod YAML File
+Create file:
+
+nginx-pod.yaml
+Paste:
+
+apiVersion: v1
+kind: Pod
+metadata:
+  name: nginx-pod
+  labels:
+    app: nginx
+spec:
+  containers:
+  - name: nginx
+    image: nginx:latest
+    ports:
+    - containerPort: 80
+🔹 Step 5: Create Pod
+kubectl apply -f nginx-pod.yaml
+🔹 Step 6: Check Pod
+kubectl get pods
+✅ Expected:
+
+nginx-pod   1/1   Running
+🔹 Step 7: View Pod Details
+kubectl describe pod nginx-pod
+🔹 Step 8: Access Pod in Browser
+kubectl port-forward pod/nginx-pod 8080:80
+👉 Open:
+
+http://localhost:8080
+✅ You will see Nginx Welcome Page
+
+🔹 Step 9: Delete Pod
+kubectl delete pod nginx-pod
+🔹 Step 10: Create Deployment
+kubectl create deployment my-nginx --image=nginx
+🔹 Step 11: Check Deployment
+kubectl get deployments
+kubectl get pods
+🔹 Step 12: Scale Deployment
+kubectl scale deployment my-nginx --replicas=3
+🔹 Step 13: Verify Scaling
+kubectl get pods
+✅ You should see 3 pods
+
+🔹 Step 14: Update Image (Rolling Update)
+kubectl set image deployment/my-nginx nginx=nginx:1.25
+Check status:
+
+kubectl rollout status deployment/my-nginx
+🔹 Step 15: Rollback (if needed)
+kubectl rollout undo deployment/my-nginx
+🔹 Step 16: Expose Deployment as Service
+kubectl expose deployment my-nginx --type=NodePort --port=80
+🔹 Step 17: Check Service
+kubectl get svc
+🔹 Step 18: Get URL
+minikube service my-nginx --url
+👉 Open the URL in browser
+
+✅ You will see Nginx page again
+
+🔹 Step 19: Delete Service
+kubectl delete svc my-nginx
+🔹 Step 20: Cleanup
+kubectl delete deployment my-nginx
+kubectl delete all --all -n default
+🔹 Step 21: Stop Cluster
+minikube stop
+(Optional delete cluster)
+
+minikube delete
+🔥 Common Errors (VERY IMPORTANT)
+❌ Minikube not starting
+✔ Run:
+
+minikube start --driver=docker
+❌ Pod stuck in Pending
+✔ Check:
+
+kubectl describe pod nginx-pod
+❌ Port already in use
+✔ Change:
+
+8081:80
+❌ No browser output
+✔ Run again:
+
+minikube service my-nginx --url
+🧠 Viva Short Answers
+👉 What is Kubernetes?
+Container orchestration platform.
+
+👉 What is Pod?
+Smallest unit in Kubernetes (runs container).
+
+👉 What is Deployment?
+Manages multiple pods and scaling.
+
+👉 What is Service?
+Exposes application to network.
+
+👉 What is Minikube?
+Runs local Kubernetes cluster.
+
+👉 What is kubectl?
+Command-line tool to manage Kubernetes.
+
+✅ Final Memory Trick
+👉 Start → Pod → Deployment → Scale → Service → Access → Cleanup
+
