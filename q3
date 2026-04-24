@@ -1,0 +1,212 @@
+
+
+CI Pipeline Lab (Python → GitHub Actions → Docker Hub)
+🔹 Step 0: Prerequisites (DO THIS FIRST)
+Make sure you have:
+
+Git installed
+Python (3.11+)
+Docker Desktop (optional but helpful)
+GitHub account
+Docker Hub account
+🔹 Step 1: Create Project Folder
+Open terminal and run:
+
+mkdir python-ci-docker-lab
+cd python-ci-docker-lab
+🔹 Step 2: Create Files (VERY IMPORTANT – CORRECT CODE)
+📄 app.py
+def add(a, b):
+    return a + b
+
+if __name__ == "__main__":
+    print("Hello from Python CI Lab!")
+    print("2 + 3 =", add(2, 3))
+📄 Create folder and test file
+mkdir tests
+📄 tests/test_app.py
+from app import add
+
+def test_add():
+    assert add(2, 3) == 5
+    assert add(-1, 1) == 0
+📄 requirements.txt
+pytest==8.3.2
+📄 Dockerfile (FIXED)
+FROM python:3.11-slim
+
+WORKDIR /app
+
+COPY requirements.txt .
+RUN pip install --no-cache-dir -r requirements.txt
+
+COPY . .
+
+CMD ["python", "app.py"]
+📄 .gitignore
+__pycache__/
+.venv/
+.pytest_cache/
+.DS_Store
+*.pyc
+🔹 Step 3: Create GitHub Actions Workflow
+Create folders:
+
+mkdir -p .github/workflows
+📄 .github/workflows/ci-dockerhub.yml
+👉 Copy correct formatted YAML (indentation is IMPORTANT):
+
+name: ci-dockerhub
+
+on:
+  push:
+    branches: ["main"]
+    tags: ["*"]
+  pull_request:
+    branches: ["main"]
+
+jobs:
+  build-test-push:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+
+      - name: Install deps
+        run: |
+          python -m pip install --upgrade pip
+          pip install -r requirements.txt
+
+      - name: Run tests
+        run: pytest -q
+
+      - name: Docker meta
+        id: meta
+        uses: docker/metadata-action@v5
+        with:
+          images: ${{ secrets.DOCKERHUB_USERNAME }}/python-ci-lab
+          tags: |
+            type=raw,value=latest,enable={{is_default_branch}}
+            type=sha,prefix=sha-,format=short
+            type=ref,event=tag
+
+      - name: Set up QEMU
+        uses: docker/setup-qemu-action@v3
+
+      - name: Set up Buildx
+        uses: docker/setup-buildx-action@v3
+
+      - name: Login to Docker Hub
+        uses: docker/login-action@v3
+        with:
+          username: ${{ secrets.DOCKERHUB_USERNAME }}
+          password: ${{ secrets.DOCKERHUB_TOKEN }}
+
+      - name: Build and push
+        uses: docker/build-push-action@v6
+        with:
+          context: .
+          push: true
+          tags: ${{ steps.meta.outputs.tags }}
+          labels: ${{ steps.meta.outputs.labels }}
+          platforms: linux/amd64
+🔹 Step 4: Test Locally (VERY IMPORTANT)
+Run:
+
+python app.py
+👉 Output:
+
+Hello from Python CI Lab!
+2 + 3 = 5
+Run test:
+
+pytest -q
+👉 Should show:
+
+1 passed
+(Optional Docker test):
+
+docker build -t python-ci-lab .
+docker run --rm python-ci-lab
+🔹 Step 5: Push to GitHub
+Create repo in GitHub
+
+Then run:
+
+git init
+git add .
+git commit -m "initial commit"
+git branch -M main
+git remote add origin https://github.com/<your-username>/python-ci-docker-lab.git
+git push -u origin main
+🔹 Step 6: Add GitHub Secrets (CRITICAL STEP)
+Go to:
+GitHub → Repo → Settings → Secrets → Actions
+
+Add:
+
+DOCKERHUB_USERNAME
+DOCKERHUB_TOKEN
+👉 Get token from Docker Hub → Security → Access Tokens
+
+🔹 Step 7: Run CI Pipeline
+Go to:
+👉 GitHub → Actions tab
+
+✔ Click workflow
+✔ Watch steps:
+
+Install dependencies
+Run pytest
+Build Docker image
+Push to Docker Hub
+🔹 Step 8: Verify Docker Image
+Check in Docker Hub:
+
+https://hub.docker.com/r/<your-username>/python-ci-lab
+🔹 Step 9: (Optional) Release Tag
+git tag v1.0.0
+git push origin v1.0.0
+👉 This triggers another pipeline
+
+🔥 Common Errors (EXAM LIFE SAVER)
+❌ YAML indentation error
+✔ Fix spacing exactly like above
+
+❌ Tests failing
+✔ Run pytest -q locally first
+
+❌ Docker push failed
+✔ Check:
+
+username
+token
+❌ No workflow running
+✔ Ensure:
+
+git push origin main
+🧠 Viva Quick Answers
+👉 What is CI?
+Continuous Integration – automatically testing code when pushed.
+
+👉 What is GitHub Actions?
+Automation tool to run workflows like testing and deployment.
+
+👉 What is Docker used for here?
+To package Python app into a container.
+
+👉 Why pytest?
+To test correctness of code.
+
+👉 What are secrets?
+Secure variables like passwords stored in GitHub.
+
+✅ Final Memory Trick
+👉 Code → Test → Push → CI runs → Docker build → Push to Hub
+
